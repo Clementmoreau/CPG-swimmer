@@ -1,49 +1,57 @@
 % Motion of a swimmer driven by CPG
+% Updated 24 Jan 2024 with omega turn term
 
 addpath(genpath('./helpers'))
 
 %% Set the parameters.
 
-% Filament parameters.
+% *** Filament parameters. ***
+
 N = 10; % number of links
 gamma = 1/70; % ratio between the hydrodynamic drag coefficients (1/2 for Stokes flow, 1/70 for agar gel)
 Sp = 4; % Sperm number (typical range 1-10)
 kd = 1; % Bending stiffness (default = 1)
 L = ones(1,N); % Lengths of the segments (default = 1)
 
-% CPG model parameters.
-omega = 2*pi; % T=1 unit
-tau = 12;%*2^(1/4); % Strength of the activity
-coup = 0.1; % Oscillators coupling strength
-coupR = coup; % Differential coupling
-sigma_amp = 20;
-sigma = @(t) sigma_amp; %* 2*(mod(floor(t/8),2)-3/4); % Proprioception strength
-%psi = @(t) pi*(mod(floor(t/10),2));
+% *** CPG model parameters ***
 
-t_switch = 25;
-switch_width = 0.01;
-psi = @(t) psi_custom(t,t_switch,switch_width);
-% psi = @(t) pi*t/10;
-%psi = @(t) 0;
+% for core model
+omega = 2*pi; % T=1 unit for intrinsic oscillation
+tau = 5; % Strength of the active torque
+coup = 1; % Oscillators coupling strength
+coupR = coup; % Differential coupling (not in use currently)
 
-% sig_test = sigma*2*(mod(floor(t/5),2)-1/2);
+% for variable proprioception
+sigma_amp = 6; % strength of proprioception
+t_switch = 15; % how often proprioception sign switches
+switch_width = 0.1; % how fast the switch occurs
+sigma = @(t) 2*sigma_amp*sigma_custom(t,t_switch,switch_width) - sigma_amp; % propioception function
+psi = @(t) pi; % phase in proproceptive term %psi_custom(t,t_switch,switch_width);
+
+% for omega-turns
+cutoff = @(x) sigma_amp - abs(x); % Cutoff function activating the omega turn when sigma is close to zero
+alpha_omega = pi/4; % target angle at each junction
+K_omega = 6*omega; % how fast the target angle will be reached
 
 % Pack the physical parameters in the params structure.
 params = struct();
 params.N = N;params.gamma = gamma;params.Sp=Sp;params.kd=kd;params.L=L;
 params.omega=omega;params.tau=tau;params.coup=coup;params.coupR=coupR;params.sigma=sigma;params.psi=psi;
+params.sigma_amp = sigma_amp;
+params.cutoff = cutoff; params.K_omega = K_omega; params.alpha_omega = alpha_omega;
 
 % Simulation options
-T=250; % final time
+T=100; % final time
 tpnum=T*50; % number of time steps
 tps=linspace(0,T,tpnum); % time step vector
 opts = odeset('RelTol',1e-5,'AbsTol',1e-5);
 
-PSI =[];
+% Plot the sigma function. 
+SIG =[];
 for i=1:length(tps)
-    PSI(i) = psi(tps(i));
+    SIG(i) = sigma(tps(i));
 end
-figure(2);clf;plot(tps,PSI);
+figure(2);clf;plot(tps,SIG);
 
 % Output options.
 Itraj=1; % 1: to visualise trajecotry
@@ -78,7 +86,7 @@ end
 
 figsize = 400;
 
-iframe=20;
+iframe=10;
 
 %-------- draw trajectories
 if Itraj==1

@@ -57,8 +57,11 @@ phi_cpg = coup*sin(phiA) + coupR*sin(phiB);
 phi_sens = sigma(t)*cos(phi+psi(t)).*Tn;
 
 % Feedback for omega-turn
-psi_omega = 2*pi - acos(kd * alpha_omega / tau) - acos(omega / K_omega);
-phi_omega = cutoff(sigma(t)) .* K_omega .* cos(phi - psi_omega);
+cutoff = @(x) sigma_amp-abs(x);
+K = 2*omega;
+alpha_omega = pi/10;
+psi_omega = 2*pi - acos(kd * alpha_omega / tau) - acos(omega/K);
+phi_omega = cutoff(sigma(t)) .* K .* cos(phi - psi_omega);
 
 PhiDot = phi_int + phi_cpg + phi_sens + phi_omega;
 
