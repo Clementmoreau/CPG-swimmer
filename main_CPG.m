@@ -18,20 +18,20 @@ L = ones(1,N); % Lengths of the segments (default = 1)
 % for core model
 omega = 2*pi; % T=1 unit for intrinsic oscillation
 tau = 5; % Strength of the active torque
-coup = 1; % Oscillators coupling strength
+coup = 0.5; % Oscillators coupling strength
 coupR = coup; % Differential coupling (not in use currently)
 
 % for variable proprioception
-sigma_amp = 6; % strength of proprioception
-t_switch = 15; % how often proprioception sign switches
-switch_width = 0.1; % how fast the switch occurs
+sigma_amp = 0.5; % strength of proprioception
+t_switch = 15+5*(rand-1/2); % how often proprioception sign switches
+switch_width = 3; % how fast the switch occurs
 sigma = @(t) 2*sigma_amp*sigma_custom(t,t_switch,switch_width) - sigma_amp; % propioception function
 psi = @(t) pi; % phase in proproceptive term %psi_custom(t,t_switch,switch_width);
 
 % for omega-turns
-cutoff = @(x) sigma_amp - abs(x); % Cutoff function activating the omega turn when sigma is close to zero
-alpha_omega = pi/4; % target angle at each junction
-K_omega = 6*omega; % how fast the target angle will be reached
+cutoff = @(x) 2*(sigma_amp - abs(x)); % Cutoff function activating the omega turn when sigma is close to zero
+alpha_omega = 2*(rand-1/2) * tau/kd; % target angle at each junction, maximum absolute value is tau/kd
+K_omega = 5*omega; % how fast the target angle will be reached
 
 % Pack the physical parameters in the params structure.
 params = struct();
@@ -41,10 +41,10 @@ params.sigma_amp = sigma_amp;
 params.cutoff = cutoff; params.K_omega = K_omega; params.alpha_omega = alpha_omega;
 
 % Simulation options
-T=100; % final time
+T=40; % final time
 tpnum=T*50; % number of time steps
 tps=linspace(0,T,tpnum); % time step vector
-opts = odeset('RelTol',1e-5,'AbsTol',1e-5);
+opts = odeset('RelTol',1e-8,'AbsTol',1e-8);
 
 % Plot the sigma function. 
 SIG =[];
@@ -86,7 +86,7 @@ end
 
 figsize = 400;
 
-iframe=10;
+iframe=15;
 
 %-------- draw trajectories
 if Itraj==1

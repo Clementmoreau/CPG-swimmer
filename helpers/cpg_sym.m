@@ -12,6 +12,8 @@ coupR=params.coupR;
 sigma=params.sigma;
 psi=params.psi;
 sigma_amp = params.sigma_amp;
+sigma_1 = params.sigma_1;
+sigma_2 = params.sigma_2; 
 
 cutoff = params.cutoff;
 alpha_omega = params.alpha_omega;
@@ -54,11 +56,11 @@ phi_int = omega*ones(N-1,1);
 phi_cpg = coup*sin(phiA) + coupR*sin(phiB);
 
 % Sensory feedback for locomotion
-phi_sens = sigma(t)*cos(phi+psi(t)).*Tn;
+phi_sens = sigma_1(t)*cos(phi+psi(t)).*Tn;
 
 % Feedback for omega-turn
 psi_omega = 2*pi - acos(kd * alpha_omega / tau) - acos(omega / K_omega);
-phi_omega = cutoff(sigma(t)) .* K_omega .* cos(phi - psi_omega);
+phi_omega = sigma_2(t) .* K_omega .* cos(phi - psi_omega);
 
 PhiDot = phi_int + phi_cpg + phi_sens + phi_omega;
 
