@@ -1,0 +1,85 @@
+% For sigma1-sigma2 dynamics
+
+addpath(genpath('./helpers'))
+
+%% Set the parameters.
+
+% *** Filament parameters. ***
+
+% for variable proprioception
+t_switch = 50; % how often proprioception sign switches
+
+T=400; % final time
+tpnum=T*50; % number of time steps
+tps=linspace(0,T,tpnum); % time step vector
+
+figure(2);clf;
+set(gcf, 'Position',  [1,1,200,434])
+tl=tiledlayout(3,1);
+
+nexttile(1);
+
+sigma_1 = @(t) 12*(cos(2*pi*t/t_switch)^1);
+sigma_2 = @(t) 3*sin(2*pi*t/t_switch);
+
+% Plot the sigma_1-sigma_2 function. 
+sig1 =zeros(1,length(tps));
+sig2 =zeros(1,length(tps));
+for i=1:length(tps)
+    sig1(i) = sigma_1(tps(i));
+    sig2(i) = sigma_2(tps(i));
+end
+
+plot(sig1,sig2,'k','LineWidth',2);
+set(gca,'FontSize',20)
+set(gca,'TickLabelInterpreter','latex')
+axis tight
+ylabel('$\sigma_2$','Interpreter','latex')
+%xticks([]);yticks([])
+
+nexttile(2);
+
+sigma_1 = @(t) 12*(cos(2*pi*t/t_switch)^1);
+sigma_2 = @(t) 3*sin(2*pi*t/t_switch)^25;
+
+% Plot the sigma_1-sigma_2 function. 
+sig1 =zeros(1,length(tps));
+sig2 =zeros(1,length(tps));
+for i=1:length(tps)
+    sig1(i) = sigma_1(tps(i));
+    sig2(i) = sigma_2(tps(i));
+end
+
+plot(sig1,sig2,'k','LineWidth',2);
+set(gca,'FontSize',20)
+set(gca,'TickLabelInterpreter','latex')
+axis tight
+ylabel('$\sigma_2$','Interpreter','latex')
+%xticks([]);yticks([])
+
+nexttile(3);
+
+sigma_1 = @(t) 12*(cos(2*pi*t/t_switch)^1);
+sigma_2 = @(t) 3*sin(2*pi*t/t_switch/sqrt(2))^25;
+
+% Plot the sigma_1-sigma_2 function. 
+sig1 =zeros(1,length(tps));
+sig2 =zeros(1,length(tps));
+for i=1:length(tps)
+    sig1(i) = sigma_1(tps(i));
+    sig2(i) = sigma_2(tps(i));
+end
+
+plot(sig1,sig2,'k','LineWidth',2);
+set(gca,'FontSize',20)
+set(gca,'TickLabelInterpreter','latex')
+axis tight
+xlabel('$\sigma_1$','Interpreter','latex')
+ylabel('$\sigma_2$','Interpreter','latex')
+%xticks([]);yticks([])
+
+
+tl.Padding = "compact";
+tl.
+
+

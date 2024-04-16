@@ -1,0 +1,170 @@
+% Motion of a swimmer driven by CPG
+% Updated 24 Jan 2024 with omega turn term
+
+addpath(genpath('./helpers'))
+
+%% Set the parameters.
+
+% *** Filament parameters. ***
+
+N = 10; % number of links
+gamma = 1/70; % ratio between the hydrodynamic drag coefficients (1/2 for Stokes flow, 1/70 for agar gel)
+Sp = 4; % Sperm number (typical range 1-10)
+kd = 1; % Bending stiffness (default = 1)
+L = ones(1,N); % Lengths of the segments (default = 1)
+
+% *** CPG model parameters ***
+
+% for core model
+omega = 2*pi; % T=1 unit for intrinsic oscillation
+tau = 8; % Strength of the active torque
+coup = 0.1; % Oscillators coupling strength
+coupR = coup; % Differential coupling (not in use currently)
+
+% for variable proprioception
+t_switch = 50; % how often proprioception sign switches
+sigma_1 = @(t) 12*cos(2*pi*t/t_switch)^1;
+
+% for omega-turns
+sigma_2 = @(t) 3*sin(2*pi*t/t_switch/1)^25;
+alpha_omega = 0.99*tau/kd;%2*(rand-1/2) * tau/kd; % target angle at each junction, maximum absolute value is tau/kd
+K_omega = 2*omega; % how fast the target angle will be reached
+
+% Pack the physical parameters in the params structure.
+params = struct();
+params.N = N;params.gamma = gamma;params.Sp=Sp;params.kd=kd;params.L=L;
+params.omega=omega;params.tau=tau;params.coup=coup;params.coupR=coupR;
+params.sigma_1 = sigma_1;
+params.sigma_2 = sigma_2;
+params.K_omega = K_omega; params.alpha_omega = alpha_omega;
+
+% Simulation options
+T=100; % final time
+tpnum=T*50; % number of time steps
+tps=linspace(0,T,tpnum); % time step vector
+opts = odeset('RelTol',1e-10,'AbsTol',1e-10);
+
+% Plot the sigma_1-sigma_2 function. 
+sig1 =zeros(1,length(tps));
+sig2 =zeros(1,length(tps));
+for i=1:length(tps)
+    sig1(i) = sigma_1(tps(i));
+    sig2(i) = sigma_2(tps(i));
+end
+figure(2);clf;plot(sig1,sig2);
+%axis equal
+
+% Output options.
+Itraj=1; % 1: to visualise trajecotry
+IMovie=0; % 1: to generate a movie
+
+%Initial condition. (x,y,theta,alpha_1...alpha_N-1)
+
+% z0 = [0;0;2*pi*rand;0*ones(N-1,1)]; % initial geometry
+z0 = [0;0;0;0*ones(N-1,1)]; 
+
+p0 = zeros(N-1,1); % initial CPG state
+
+init = [z0;p0];
+
+%% Solve the equation.
+
+dZ=@(t,z) cpg_sym(t,z,params);
+tic
+[tps,traj]=ode15s(dZ,tps,init,opts);
+toc
+
+%% post-processing
+
+Xc=[];Yc=[];
+X1=[];Y1=[];
+for i = 1:length(tps)
+     [X,Y,TH]=coordinates_filament(traj(i,:),params);
+     Xc=[Xc sum(X)/(N+1)];Yc=[Yc sum(Y)/(N+1)];
+     X1=[X1 X(1)];
+     Y1=[Y1 Y(1)];
+end
+
+figsize = 400;
+
+iframe=82;
+
+i_ini = floor(0.54*length(tps)); 
+i_fin = floor(0.71*length(tps)); 
+
+fig7=figure(7);clf;
+set(gcf, 'Position',  [1648,-322,400,400])
+hold on
+
+% Plot the trajectory between the two time stamps.
+plot(X1(i_ini:i_fin),Y1(i_ini:i_fin),'k')
+
+% Plot some snapshots
+col = colormap(parula(i_fin-i_ini+1));
+
+for i=i_ini:iframe:i_fin%i=length(tps)-1000:10:length(tps)
+    [X,Y,TH]=coordinates_filament(traj(i,:),params);
+    plot(X,Y,'LineWidth',3,'Color',col(i-i_ini+1,:))    
+end
+
+    xlabel('$x$','FontSize',14,'Interpreter','latex');
+    ylabel('$y$','FontSize',14,'Interpreter','latex');
+    set(gca,'TickLabelInterpreter','latex') 
+    axis equal
+    grid on 
+    box on
+    set(gca,'FontSize',20)
+
+
+%fig6=figure(6);clf;
+%set(gcf, 'Position',  [figsize, 640, figsize*2, figsize])
+    Larc=cumsum(L)/sum(L);
+    Tarc=tps(i_ini:i_fin);
+    [Tmesh,Lmesh]=meshgrid(Tarc,Larc(1:end-1));
+    
+    Phdat=mod(traj(i_ini:i_fin,N+3:end),2*pi);
+
+fig5=figure(5);clf;
+set(gcf, 'Position',  [figsize, 400, figsize*2, figsize*0.5])    
+    sA=surf(Tmesh,Lmesh,traj(i_ini:i_fin,4:N+2)');
+    sA.EdgeColor = 'none';
+    %image(PhData','CDataMapping','scaled');
+    cbA=colorbar;
+    colormap jet
+    xlabel('time','FontSize',14,'Interpreter','latex');
+    ylabel('length','FontSize',14,'Interpreter','latex');
+    title('curvature','Interpreter','latex');
+    set(gca,'TickLabelInterpreter','latex');    
+    set(cbA,'TickLabelInterpreter','latex'); 
+    axis tight
+    view(0,90)
+    grid on    
+    set(gca,'FontSize',20)
+
+fig6=figure(6);clf;
+set(gcf, 'Position',  [figsize, 100, figsize*2, figsize*0.5])    
+    sPh=surf(Tmesh,Lmesh,Phdat');
+    sPh.EdgeColor = 'none';
+    cbPh=colorbar;
+    colormap hsv
+    xlabel('time','FontSize',14,'Interpreter','latex');
+    ylabel('length','FontSize',14,'Interpreter','latex');
+    title('phase','Interpreter','latex')
+    set(gca,'TickLabelInterpreter','latex')    
+    set(cbPh,'TickLabelInterpreter','latex'); 
+    set(cbPh,'Limits',[0 2*pi]); 
+    set(cbPh,'Ticks',[0 pi 2*pi]);
+    set(cbPh,'TickLabels',{'0', '$\pi$', '$2\pi$'});       
+    axis tight
+    view(0,90)
+    grid on    
+    set(gca,'FontSize',20)
+
+     
+
+dpi = '-r400';
+%saveas(fig5,'fig5','epsc')
+%saveas(fig6,'fig6','epsc')
+%saveas(fig7,'fig7','epsc') 
+%saveas(fig8,'fig8','epsc') 
+%saveas(fig9,'fig9','epsc') 
