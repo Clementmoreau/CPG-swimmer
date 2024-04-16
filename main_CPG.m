@@ -17,41 +17,42 @@ L = ones(1,N); % Lengths of the segments (default = 1)
 
 % for core model
 omega = 2*pi; % T=1 unit for intrinsic oscillation
-tau = 5; % Strength of the active torque
-coup = 0.5; % Oscillators coupling strength
+tau = 8; % Strength of the active torque
+coup = 0.1; % Oscillators coupling strength
 coupR = coup; % Differential coupling (not in use currently)
 
 % for variable proprioception
-sigma_amp = 0.5; % strength of proprioception
-t_switch = 15+5*(rand-1/2); % how often proprioception sign switches
-switch_width = 3; % how fast the switch occurs
-sigma = @(t) 2*sigma_amp*sigma_custom(t,t_switch,switch_width) - sigma_amp; % propioception function
-psi = @(t) pi; % phase in proproceptive term %psi_custom(t,t_switch,switch_width);
+t_switch = 50; % how often proprioception sign switches
+sigma_1 = @(t) 12*(1-cos(2*pi*t/t_switch)^9);
 
 % for omega-turns
-cutoff = @(x) 2*(sigma_amp - abs(x)); % Cutoff function activating the omega turn when sigma is close to zero
-alpha_omega = 2*(rand-1/2) * tau/kd; % target angle at each junction, maximum absolute value is tau/kd
-K_omega = 5*omega; % how fast the target angle will be reached
+sigma_2 = @(t) 3*sin(2*pi*t/t_switch/1)^5;
+alpha_omega = 0.99*tau/kd;%2*(rand-1/2) * tau/kd; % target angle at each junction, maximum absolute value is tau/kd
+K_omega = 2*omega; % how fast the target angle will be reached
 
 % Pack the physical parameters in the params structure.
 params = struct();
 params.N = N;params.gamma = gamma;params.Sp=Sp;params.kd=kd;params.L=L;
-params.omega=omega;params.tau=tau;params.coup=coup;params.coupR=coupR;params.sigma=sigma;params.psi=psi;
-params.sigma_amp = sigma_amp;
-params.cutoff = cutoff; params.K_omega = K_omega; params.alpha_omega = alpha_omega;
+params.omega=omega;params.tau=tau;params.coup=coup;params.coupR=coupR;
+params.sigma_1 = sigma_1;
+params.sigma_2 = sigma_2;
+params.K_omega = K_omega; params.alpha_omega = alpha_omega;
 
 % Simulation options
-T=40; % final time
+T=100; % final time
 tpnum=T*50; % number of time steps
 tps=linspace(0,T,tpnum); % time step vector
-opts = odeset('RelTol',1e-8,'AbsTol',1e-8);
+opts = odeset('RelTol',1e-10,'AbsTol',1e-10);
 
-% Plot the sigma function. 
-SIG =[];
+% Plot the sigma_1-sigma_2 function. 
+sig1 =zeros(1,length(tps));
+sig2 =zeros(1,length(tps));
 for i=1:length(tps)
-    SIG(i) = sigma(tps(i));
+    sig1(i) = sigma_1(tps(i));
+    sig2(i) = sigma_2(tps(i));
 end
-figure(2);clf;plot(tps,SIG);
+figure(2);clf;plot(sig1,sig2);
+%axis equal
 
 % Output options.
 Itraj=1; % 1: to visualise trajecotry
@@ -62,7 +63,7 @@ IMovie=0; % 1: to generate a movie
 % z0 = [0;0;2*pi*rand;0*ones(N-1,1)]; % initial geometry
 z0 = [0;0;0;0*ones(N-1,1)]; 
 
-p0 = (1.5)*(2*pi/(N-1))*(1:N-1)'; % initial CPG state
+p0 = zeros(N-1,1); % initial CPG state
 
 init = [z0;p0];
 
@@ -91,7 +92,7 @@ iframe=15;
 %-------- draw trajectories
 if Itraj==1
 fig7=figure(7);clf;
-set(gcf, 'Position',  [1, 1, 3*figsize, 3*figsize])
+set(gcf, 'Position',  [1,1,946,894])
 for i=1:iframe:length(tps)%i=length(tps)-1000:10:length(tps)
     plot(Xc(1:i),Yc(1:i),'k','LineWidth',2)
     hold on
@@ -238,7 +239,7 @@ end
 
 disp('Now.....converting to a MP4 file....')
 fps=60;
-animtitle=strcat('anim');
+animtitle=strcat('anim2');
 vid1aj = VideoWriter(animtitle,'MPEG-4');
 vid1aj.FrameRate=fps;
 vid1aj.Quality=100;
