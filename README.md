@@ -17,3 +17,6 @@ Dependent functions are in the "helpers" folder.
 > "cpg_sym": computes the right-hand side of the dynamical system to be solved.
 >  "matrix3Nparameters","matrixTorque" : helpers for computing the system that needs to be inverted (the hydrodynamic matrix A)
 
+## "generate_xxxx" files
+
+Filenames starting this way generate the corresponding figures from the linked research article.
