@@ -1,8 +1,10 @@
 # Description
 
-MATLAB code accompanying the manuscript
+This software is made of MATLAB code accompanying the manuscript
 
 > *Robust undulatory locomotion via neuromechanical adjustments\\ in a dissipative medium* by K. Ishimoto, C. Moreau, and J. Herault
+>
+accepted in Journal of Royal Society Interface as of Nov. 12, 2024.
 
 # Use
 
