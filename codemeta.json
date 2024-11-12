@@ -1,0 +1,17 @@
+{
+    "@context": "https://w3id.org/codemeta/3.0",
+    "type": "SoftwareSourceCode",
+    "applicationCategory": "Physics",
+    "codeRepository": "https://github.com/Clementmoreau/CPG-swimmer",
+    "dateCreated": "2024-01-01",
+    "description": "Software to simulate the locomotion of a slender locomotor model driven by a network of oscillators (Central Pattern Generator)",
+    "keywords": [
+        "swimming",
+        "locomotion",
+        "cpg"
+    ],
+    "license": "https://spdx.org/licenses/CC-BY-4.0",
+    "name": "CPG-microswimmer",
+    "programmingLanguage": "Matlab",
+    "referencePublication": "https://arxiv.org/html/2405.01802v1"
+}
